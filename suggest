@@ -131,7 +131,7 @@ x, y, z = 1,2,3
 1000000 loops, best of 3: 121 ns per loop
 x < y < z效率略高，而且可读性更好。
 
-while 1 比 while True 更快
+while 1 比 while True 更快  （仅在python2中，3中一样
 def while_1():
  n = 100000
  while 1:
