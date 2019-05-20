@@ -1,0 +1,43 @@
+对于规模更大、运行时间更长的数据分析应用程序，你可能会希望测试一下各个部分或函数调用或语句的执行时间。你可能会希望了解某个复杂计算过程中到底是哪些函数占用的时间最多。幸运的是，在开发和测试代码的过程中，IPython能够让你轻松得到这些信息。使用内置的time模块及其time.clock和time.time函数手工测试代码执行时间是一件令人烦闷的事情，因为你必须编写许多一模一样的了无生趣的公式化代码：
+import time
+start = time.time()
+for i in range(iterations):
+    # 这里放一些待执行的代码
+    elapsed_per = (time.time() - start) / iterations
+
+由于这是一个非常常用的功能，所以IPython专门提供了两个魔术函数（%time和%timeit）以便自动完成该过程。%time一次执行一条语句，然后报告总体执行时间。假设我们有一大堆字符串，希望对几个“能够选出具有特殊前缀的字符串”的函数进行比较。下面是一个拥有60万字符串的数组，以及两个不同的“能够选出其中以foo开头的字符串”的方法：
+# 一个非常大的字符串数组
+strings = ['foo', 'foobar', 'baz', 'qux', 'python', 'Guido Van Rossum'] * 100000
+
+method1 = [x for x in strings if x.startswith('foo')]
+
+method2 = [x for x in strings if x[:3] == 'foo']
+
+看上去它们的性能表现应该差不多，对吧？我们通过%time来确认一下：
+In [561]: %time method1 = [x for x in strings if x.startswith('foo')]
+CPU times: user 0.19 s, sys: 0.00 s, total: 0.19 s
+Wall time: 0.19 s
+
+In [562]: %time method2 = [x for x in strings if x[:3] == 'foo']
+CPU times: user 0.09 s, sys: 0.00 s, total: 0.09 s
+Wall time: 0.09 s
+
+墙上时间（Wall time）是我们最感兴趣的数字。所以，看上去第一个方法耗费了两倍以上的时间，但这并不是一个非常精确的结果。如果你对相同语句多次执行%time的话，就会发现其结果是会变的。为了得到更为精确的结果，需要使用魔术函数%timeit。对于任意语句，它会自动多次执行以产生一个非常精确的平均执行时间。
+In [563]: %timeit [x for x in strings if x.startswith('foo')]
+10 loops, best of 3: 159 ms per loop
+　　
+In [564]: %timeit [x for x in strings if x[:3] == 'foo']
+10 loops, best of 3: 59.3 ms per loop
+
+这个貌似平淡无奇的例子正好说明了一个事实：我们非常有必要了解Python标准库、NumPy、pandas以及本书中所用到的其他库的性能特点。在大型数据分析应用程序中，这些不起眼的毫秒数是会不断累积的！
+
+对于那些执行时间非常短（甚至是那些微秒（1e-6秒）或纳秒（1e-9秒）级的）的分析语句和函数而言，%timeit是非常有用的。虽然这些时间值小到几乎可以忽略不计，但同样执行100万次一个20微秒的函数，所用的时间要比一个5微秒的多15秒。在上面那个例子中，我们可以直接对那两个字符串运算进行比较以了解其性能特点：
+In [565]: x = 'foobar'
+ 
+In [566]: y = 'foo'
+
+In [567]: %timeit x.startswith(y)
+1000000 loops, best of 3: 267 ns per loop
+
+In [568]: %timeit x[:3] == y
+10000000 loops, best of 3: 147 ns per loop　　
